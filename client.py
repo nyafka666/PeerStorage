@@ -30,8 +30,6 @@ def get():
     shuffled_dht.pop(0)
     random.shuffle(shuffled_dht)
     # We need to shuffle the dht to distribute network load between nodes
-    print("Shuffled: " + str(shuffled_dht))
-    print("Dht: " + str(tools.dht))
     for node in shuffled_dht:
         address = node.split('-')[1]
         host = str(address.split(':')[0])
@@ -42,8 +40,6 @@ def get():
                 s.sendall(str.encode('get' + ':' + user_data))
                 data = s.recv(4096)
                 unpacked = pickle.loads(data)
-                print("Data from host: " + str(unpacked))
-                # if command == 'get':
                 with open(dht_path, 'r') as f:
                     read = f.readlines()
                     first = read[0]
@@ -58,7 +54,6 @@ def get():
                 with open(dht_path, 'r') as f:
                     new_dht = f.readlines()
                 tools.dht = new_dht
-                print("New DHT: " + str(tools.dht))
             break
         except Exception as ex:
             print(str(ex))
@@ -80,12 +75,10 @@ def put(similarities, command):
                 nodes = list(pickle.loads(recvdata))
 
                 if ':' in str(nodes):  # If we received '127.0.0.1:4444' for example
-                    print("Data is: " + str(nodes) + " Type data is:" + str(type(nodes)))
                     for node in nodes:
                         # Here we're removing our ip from list and if we have
                         # the same node in the sorted similarities list, we need
                         # to remove it from the received list too.
-                        print("Node in data is: " + node)
                         if user_ip in str(node):
                             nodes.remove(node)
                         elif str(node) in str(similarities):
@@ -95,9 +88,7 @@ def put(similarities, command):
                         # This fixes a bug when 'for' loop in the lines above can't remove the last element
                         nodes.clear()
                     elif len(nodes) != 0:  # If received list contains at least one element
-                        print("Before append: " + str(nodes))
                         similarities.extend(nodes)
-                        print("After append: " + str(nodes))
 
                 else:  # elif '[OK]' not in str(nodes) - draft
                     print("File found! " + filename + " is:\n" + str(pickle.loads(recvdata)))

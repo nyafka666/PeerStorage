@@ -21,8 +21,6 @@ def connection(conn, addr):
         # The line below retrieves the first part of the received command,
         # which placed before ':' to determine whether this request is a 'put' or 'get'.
         cmd = data.split(':')[0]
-        print(cmd)
-        print(data)
         address = data.split(':')[1]  # Get sender's "hash-127.0.0.1" from received data
         ip = address.split('-')[1]  # We removed "hash-" from the address to get sender's ip
         port = data.split(':')[2]  # Get sender's port by splitting string
@@ -59,9 +57,7 @@ def connection(conn, addr):
 
 def put_handler(file_hash, sender_ip, file_content, file_hash_path):
     result = '[OK]'
-    print(tools.dht)
     hash_id = tools.dht[0].split('-')[0]
-    print(hash_id)
 
     sorted_similarities = tools.get_similarity(file_hash)
     sorted_similarities = dict(sorted_similarities)
@@ -75,7 +71,6 @@ def put_handler(file_hash, sender_ip, file_content, file_hash_path):
             # If the node in current iteration is equal to
             # sender's ip, which is being processed by 'connection' function,
             # then we need to skip the iteration.
-            print("Sender_ip: " + sender_ip + " Node: " + node)
             continue
 
         node_metadata = sorted_similarities[node]  # Get node's hash similarity with the file_hash
@@ -94,7 +89,6 @@ def put_handler(file_hash, sender_ip, file_content, file_hash_path):
 
         nodes_to_send.append(node)
         i += 1
-    print("5 nodes to send: " + str(nodes_to_send))
 
     if len(nodes_to_send) != 0:
         result = nodes_to_send
