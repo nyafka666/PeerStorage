@@ -6,9 +6,6 @@ import Levenshtein
 import os
 import tools
 
-dht_path = ''
-dht = []
-
 
 def connection(conn, addr):
     while True:
@@ -18,24 +15,25 @@ def connection(conn, addr):
             break
 
         data = data.decode(encoding='utf-8')
-        # The line below retrieves the first part of the received command,
-        # which placed before ':' to determine whether this request is a 'put' or 'get'.
-        cmd = data.split(':')[0]
-        address = data.split(':')[1]  # Get sender's "hash-127.0.0.1" from received data
-        ip = address.split('-')[1]  # We removed "hash-" from the address to get sender's ip
-        port = data.split(':')[2]  # Get sender's port by splitting string
+        data = data.split(':')  # Example of the request part: put:<random_hash>-127.0.0.1:4444
+        cmd = data[0]  # Get requested command ('put' or 'get')
+        address = data[1]  # Get sender's "hash-127.0.0.1" from received data
+        address_splitted = address.split('-')  # Split address to get an ip
+        ip = address_splitted[1]  # We removed "hash-" from the address to get sender's ip
+        port = data[2]
         dht_append(address + ':' + port)
-
+        print("Appended: " + address + ':' + port)
+        address = ip + ':' + port  # Now address is ip:port instead of hash-ip:port
         if cmd == 'get':
             print("GET request!")
             conn.sendall(pickle.dumps(tools.dht))
         elif cmd == 'put':  # Example of put command: put:hash-127.0.0.1:33:file.txt=some_text
-            put_content = str(data).split(':')[3]  # Get the last part of put request (file.txt=some_text)
-            sender_address = ip + ':' + port
-            file_name = put_content.split('=')[0]
-            file_content = put_content.split('=')[1]
+            put_contents = data[3]  # Get the put request metadata (file.txt=some_text)
+            put_contents = put_contents.split('=')
+            file_name = put_contents[0]
+            file_content = put_contents[1]
             file_hash = create_hash(file_name)
-            file_hash_path = dht_path.split('.')[0] + '/' + file_hash  # Path to %file_hash%
+            file_hash_path = tools.dht_storage + '/' + file_hash  # Path to %file_hash%
             
             if '<<search>>' in file_content and os.path.isfile(file_hash_path):
                 # If the file content is '<<search>>', we must find it
@@ -46,11 +44,11 @@ def connection(conn, addr):
                 # use "put_handler" function to find out which nodes can have it.
                 # This function is also used to save files from 'put' request and
                 # send nodes that are "closer" to the file hash.
-                result = put_handler(file_hash, sender_address.replace('\n', ''), file_content, file_hash_path)
+                result = put_handler(file_hash, address.replace('\n', ''), file_content, file_hash_path)
             conn.sendall(pickle.dumps(result))
         else:
             conn.sendall(pickle.dumps("[wrong_command]"))
-        print(str(data))
+        print("Data from node: " + str(data))
         conn.close()
         break
 
@@ -112,17 +110,17 @@ def listening(host, port):
 
 def dht_append(node):
     # This function checks if a node exists in our hash table,
-    # and if not, we add new node to the hash table.
+    # and if not, we add a new node to the hash table.
     print("Node to append is " + node)
     print(tools.dht)
     if node.replace('\n', '') not in str(tools.dht):
         if '\n' not in node:
             node += '\n'
-        with open(dht_path, 'a') as f:
+        with open(tools.dht_path, 'a') as f:
             f.write(node)
-        with open(dht_path, 'r') as f:
-            new_dht = f.readlines()
-        tools.dht = new_dht
+        with open(tools.dht_path, 'r') as f:
+            updated_dht = f.readlines()
+        tools.dht = updated_dht
 
 
 def create_hash(text):
@@ -132,10 +130,6 @@ def create_hash(text):
 
 
 def start(host, port):
-
-    with open(dht_path, 'r') as f:
-        tools.dht = f.readlines()
-
     listen_thread = threading.Thread(target=listening, args=(host, int(port), ))
     listen_thread.start()
 

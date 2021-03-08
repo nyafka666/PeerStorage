@@ -1,7 +1,9 @@
 import Levenshtein
 from hashlib import sha1
 
-dht = []
+dht = []  # List with hash table from dht_path
+dht_path = ""  # Path to the contents of the hash table
+dht_storage = ""  # Directory with files from other nodes
 
 
 def create_hash(text):
@@ -18,8 +20,9 @@ def get_similarity(data_hash):
             continue
 
         node = node.replace('\n', '')
-        node_address = node.split('-')[1]
-        node_hash = node.split('-')[0]
+        node = node.split('-')  # Example of node: <random_hash>-127.0.0.1:4444, so we need to split it by '-'
+        node_hash = node[0]
+        node_address = node[1]
         similarity = Levenshtein.ratio(str(data_hash), node_hash)
         print("Similarity " + str(data_hash) + " and " + node_hash + '-' + node_address + " is " + str(similarity))
         similarities[node_address] = [similarity, node_hash]

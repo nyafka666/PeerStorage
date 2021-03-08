@@ -12,7 +12,6 @@ HOST = '127.0.0.1'
 PORT = 3344
 
 user_ip = ""
-dht_path = ""  # Your file with DHT
 user_hash = ""
 user_data = ""
 
@@ -40,18 +39,18 @@ def get():
                 s.sendall(str.encode('get' + ':' + user_data))
                 data = s.recv(4096)
                 unpacked = pickle.loads(data)
-                with open(dht_path, 'r') as f:
+                with open(tools.dht_path, 'r') as f:
                     read = f.readlines()
                     first = read[0]
                     read.pop(0)
                     read.extend(unpacked)
-                with open(dht_path, 'w') as f:
+                with open(tools.dht_path, 'w') as f:
                     print(list(set(read)))
                     append_list = list(set(read))
                     append_list.remove(first)
                     append_list.insert(0, first)
                     f.writelines(append_list)
-                with open(dht_path, 'r') as f:
+                with open(tools.dht_path, 'r') as f:
                     new_dht = f.readlines()
                 tools.dht = new_dht
             break
@@ -99,15 +98,21 @@ def put(similarities, command):
 
 if len(sys.argv) == 3 and not os.path.isfile(sys.argv[2]):
     PORT = sys.argv[1]
-    dht_path = sys.argv[2]
+    tools.dht_path = sys.argv[2]
     user_hash = create_id()
-    with open(dht_path, 'w') as f:
-        f.write(user_hash + '-' + HOST + ':' + str(PORT) + '\n')
-    os.mkdir(dht_path.split('.')[0])
+    user_data = user_hash + '-' + HOST + ':' + str(PORT) + '\n'
+    with open(tools.dht_path, 'w') as f:
+        f.write(user_data)
+    tools.dht = user_data
+    tools.dht_storage = tools.dht_path.split('.')[0]
+    os.mkdir(tools.dht_storage)
 elif len(sys.argv) == 2:
-    dht_path = sys.argv[1]
-    if os.path.isfile(dht_path):
-        with open(dht_path, 'r') as f:
+    tools.dht_path = sys.argv[1]
+    print("dht_path is: " + tools.dht_path)
+    tools.dht_storage = tools.dht_path.split('.')[0]
+    print("dht_storage is: " + tools.dht_storage)
+    if os.path.isfile(tools.dht_path):
+        with open(tools.dht_path, 'r') as f:
             tools.dht = f.readlines()
             user_data = tools.dht[0]  # The first element in dht is our node
             address = user_data.split('-')[1]
@@ -122,7 +127,7 @@ else:
     print('Wrong arguments')
     sys.exit()
 
-server.dht_path = dht_path
+# server.dht_path = dht_path
 server.start(HOST, PORT)
 
 
