@@ -130,12 +130,12 @@ else:
 # server.dht_path = dht_path
 server.start(HOST, PORT)
 
+#========================== Меню ==========================
 
 print("WELCOME TO")
 os.system("figlet -f slant 'PeerStorage'")
 print("code by @xml - version 1.0")
 
-print("\nYou can press [h] to help, [u] to upload and etc...")
 
 #commands = ['help - show this message', 'id - print your user_hash', 'get - update DHT', 'put - send file to DHT', 'search - search for a file']
 
@@ -143,6 +143,8 @@ help = ''
 
 while True:
     cmd = input("\n[1] upload file to DNT\n[2] search for a file\n[3] get update DHT\n[4] print your id (user hash)\n[5] help")
+
+    print("\nYou can press [h] to help, [u] to upload and etc...")
 
     if cmd == 'h' or '5':
         print(help)
